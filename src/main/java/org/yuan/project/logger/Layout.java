@@ -1,5 +1,11 @@
 package org.yuan.project.logger;
 
-public class Layout {
+import org.yuan.project.logger.spi.LoggingEvent;
 
+public abstract class Layout {
+
+	public static final String LINE_SEP = System.getProperty("line.separator");
+	
+	public abstract String format(LoggingEvent event);
+	
 }
