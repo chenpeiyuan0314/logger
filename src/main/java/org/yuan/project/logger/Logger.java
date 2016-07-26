@@ -1,19 +1,21 @@
 package org.yuan.project.logger;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import org.yuan.project.logger.helpers.AppenderAttachableImpl;
 import org.yuan.project.logger.spi.LoggingEvent;
 
 public class Logger {
 
 	protected Logger(String name) {
 		this.name = name;
-		appenderList = new ArrayList<Appender>();
+		aai = new AppenderAttachableImpl();
 	}
 	
 	public static Logger getLogger(String name) {
-		return new Logger(name);
+		return LoggerManager.getLogger(name);
+	}
+	
+	public static Logger getRootLogger() {
+		return LoggerManager.getRootLogger();
 	}
 	
 	public String getName() {
@@ -21,7 +23,7 @@ public class Logger {
 	}
 	
 	public void addAppender(Appender appender) {
-		appenderList.add(appender);
+		aai.addAppender(appender);
 	}
 	
 	public void log(Level level, String message) {
@@ -29,8 +31,10 @@ public class Logger {
 			return;
 		}
 		
-		for(Appender appender : appenderList) {
-			appender.doAppend(new LoggingEvent(level, message));
+		for(Logger log = this; log != null; log = log.getParent()) {
+			if(log.aai != null) {
+				log.aai.doAppenders(new LoggingEvent(level, message));
+			}
 		}
 	}
 	
@@ -41,8 +45,17 @@ public class Logger {
 	public void setLevel(Level level) {
 		this.level = level;
 	}
+	
+	public Logger getParent() {
+		return parent;
+	}
+
+	protected void setParent(Logger parent) {
+		this.parent = parent;
+	}
 
 	private String name;
 	private Level level;
-	private List<Appender> appenderList;
+	private Logger parent;
+	private AppenderAttachableImpl aai;
 }

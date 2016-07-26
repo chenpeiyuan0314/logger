@@ -18,7 +18,7 @@ public class ConsoleAppender extends Appender {
 			return;
 		}
 		
-		System.out.println(this.getLayout().format(event));
+		System.out.print(this.getLayout().format(event));
 	}
 
 }
