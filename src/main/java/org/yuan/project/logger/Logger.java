@@ -27,7 +27,7 @@ public class Logger {
 	}
 	
 	public void log(Level level, String message) {
-		if(this.level.isGreaterOrEqual(level)) {
+		if(getEffectiveLevel().isGreaterOrEqual(level)) {
 			return;
 		}
 		
@@ -36,6 +36,15 @@ public class Logger {
 				log.aai.doAppenders(new LoggingEvent(level, message));
 			}
 		}
+	}
+	
+	public Level getEffectiveLevel() {
+		for(Logger log = this; log != null; log = log.parent) {
+			if(log.level != null) {
+				return log.level;
+			}
+		}
+		return null;
 	}
 	
 	public Level getLevel() {
