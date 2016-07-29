@@ -1,13 +1,15 @@
 package org.yuan.project.logger.helpers;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.yuan.project.logger.Layout;
 import org.yuan.project.logger.spi.LoggingEvent;
 
 public class PatternParser {
-	
 	public static final char ESCAPE_CHAR = '%';
 	
 	public static final int DOT_STATE = 1000;
@@ -38,9 +40,6 @@ public class PatternParser {
 	}
 	
 	public PatternConverter parse() {
-		StringBuffer sb = new StringBuffer();
-		
-		int i = 0;
 		while(i < pattern.length()) {
 			char c = pattern.charAt(i++);
 			
@@ -139,24 +138,91 @@ public class PatternParser {
 	}
 	
 	private void converter(char c) {
+		PatternConverter pc = null;
+		
 		switch(c) {
 		case 'c':
+			pc = new CategoryPatternConverter(min, max, isLeft, extractPrecisionOption());
 			break;
 		case 'C':
+			pc = new ClassNamePatternConverter(min, max, isLeft, extractPrecisionOption());
 			break;
 		case 'd':
+			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,sss");
+			pc = new DatePatternConverter(min, max, isLeft, df);
 			break;
 		case 'l':
+			pc = new LocationPatternConverter(min, max, isLeft, FULL_LOCATION_CONVERTER);
 			break;
-		case '':
+		case 'L':
+			pc = new LocationPatternConverter(min, max, isLeft, LINE_LOCATION_CONVERTER);
 			break;
-		case '':
+		case 'F':
+			pc = new LocationPatternConverter(min, max, isLeft, FILE_LOCATION_CONVERTER);
 			break;
-		case '':
+		case 'm':
+			pc = new BasicPatternConverter(min, max, isLeft, MESSAGE_CONVERTER);
+			break;
+		case 'M':
+			pc = new LocationPatternConverter(min, max, isLeft, METHOD_LOCATION_CONVERTER);
+			break;
+		case 'p':
+			pc = new BasicPatternConverter(min, max, isLeft, LEVEL_CONVERTER);
+			break;
+		case 'r':
+			pc = new BasicPatternConverter(min, max, isLeft, RELATIVE_TIME_CONVERTER);
+			break;
+		case 't':
+			pc = new BasicPatternConverter(min, max, isLeft, THREAD_CONVERTER);
+			break;
+		case 'x':
+		case 'X':
+			sb.setLength(0);
+		default:
+			pc = new LiteralPatternConverter(sb.toString());
 			break;
 		}
+		
+		list.add(pc);
+		sb.setLength(0);
+		state = LIT_STATE;
+		reset();
 	}
 	
+	private String extractOption() {
+		if((i < pattern.length()) && (pattern.charAt(i) == '{')) {
+			int end = pattern.indexOf('}', i);
+			if(end > i) {
+				String r = pattern.substring(i + 1, end);
+				i = end + 1;
+				return r;
+			}
+		}
+		return null;
+	}
+	
+	private int extractPrecisionOption() {
+		String opt = extractOption();
+		int r = 0;
+		if(opt != null) {
+			try {
+				r = Integer.parseInt(opt);
+				r = r <= 0 ? 0 : r;
+				if(r <= 0) {
+					
+				}
+			} catch(NumberFormatException e) {
+				e.printStackTrace();
+			}
+		}
+		return r;
+	}
+	
+	private void reset() {
+		min = Integer.MIN_VALUE;
+		max = Integer.MAX_VALUE;
+		isLeft = false;
+	}
 	//------------------------------------------------
 	// 格式转换类
 	//------------------------------------------------
@@ -191,9 +257,9 @@ public class PatternParser {
 		public String convert(LoggingEvent event) {
 			switch(type) {
 			case RELATIVE_TIME_CONVERTER :
-				return String.valueOf(event.getTime - LoggingEvent.getStartTime());
+				return String.valueOf(event.getTimestamp() - LoggingEvent.getStartTime());
 			case THREAD_CONVERTER :
-				return null;
+				return event.getThreadName();
 			case LEVEL_CONVERTER :
 				return event.getLevel().toString();
 			case NDC_CONVERTER :
@@ -217,17 +283,86 @@ public class PatternParser {
 		public String convert(LoggingEvent event) {
 			switch(type) {
 			case FULL_LOCATION_CONVERTER :
-				return null;
+				return event.getLocationInfo().getFullInfo();
 			case METHOD_LOCATION_CONVERTER :
-				return null;
-			case CLASS_LOCATION_CONVERTER :
-				return event.getLevel().toString();
+				return event.getLocationInfo().getMethodName();
 			case LINE_LOCATION_CONVERTER :
-				return null;
+				return event.getLocationInfo().getLineNumber();
 			case FILE_LOCATION_CONVERTER : 
-				return event.getMessage();
+				return event.getLocationInfo().getFileName();
 			}
 			return null;
+		}
+	}
+	
+	private abstract class NamedPatternConverter extends PatternConverter {
+		private int precision;
+		
+		public NamedPatternConverter(int min, int max, boolean isLeft, int precision) {
+			super(min, max, isLeft);
+			this.precision = precision;
+		}
+		
+		public abstract String getFullyQualifiedName(LoggingEvent event);
+		
+		public String convert(LoggingEvent event) {
+			String tmp = getFullyQualifiedName(event);
+			if(precision <= 0) {
+				return tmp;
+			} else {
+				int len = tmp.length();
+				int end = len - 1;
+				for(int i = precision; i>0; i--) {
+					end = tmp.lastIndexOf('.', end - 1);
+					if(end == -1) {
+						return tmp;
+					}
+				}
+				return tmp.substring(end + 1, len);
+			}
+		}
+	}
+	
+	private class ClassNamePatternConverter extends NamedPatternConverter {
+		public ClassNamePatternConverter(int min, int max, boolean isLeft, int precision) {
+			super(min, max, isLeft, precision);
+		}
+
+		@Override
+		public String getFullyQualifiedName(LoggingEvent event) {
+			return event.getLocationInfo().getClassName();
+		}
+	}
+	
+	private class CategoryPatternConverter extends NamedPatternConverter {
+		public CategoryPatternConverter(int min, int max, boolean isLeft, int precision) {
+			super(min, max, isLeft, precision);
+		}
+
+		@Override
+		public String getFullyQualifiedName(LoggingEvent event) {
+			return event.getLogger().getName();
+		}
+	}
+	
+	private class DatePatternConverter extends PatternConverter {
+		private DateFormat df;
+		
+		public DatePatternConverter(int min, int max, boolean isLeft, DateFormat df) {
+			super(min, max, isLeft);
+			this.df = df;
+		}
+
+		@Override
+		public String convert(LoggingEvent event) {
+			Date date = new Date(event.getTimestamp());
+			String converted = null;
+			try {
+				converted = df.format(date);
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+			return converted;
 		}
 	}
 	
@@ -240,4 +375,6 @@ public class PatternParser {
 	private int max;
 	private boolean isLeft;
 	private List<PatternConverter> list;
+	private StringBuffer sb = new StringBuffer();
+	private int i = 0;
 }

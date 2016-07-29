@@ -33,7 +33,7 @@ public class Logger {
 		
 		for(Logger log = this; log != null; log = log.getParent()) {
 			if(log.aai != null) {
-				log.aai.doAppenders(new LoggingEvent(level, message));
+				log.aai.doAppenders(new LoggingEvent(level, message, this, null));
 			}
 		}
 	}
