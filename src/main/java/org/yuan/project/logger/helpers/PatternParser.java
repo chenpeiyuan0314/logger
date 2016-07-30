@@ -134,7 +134,7 @@ public class PatternParser {
 			node = item;
 		}
 		
-		return node;
+		return list.get(0);
 	}
 	
 	private void converter(char c) {
@@ -148,7 +148,13 @@ public class PatternParser {
 			pc = new ClassNamePatternConverter(min, max, isLeft, extractPrecisionOption());
 			break;
 		case 'd':
-			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss,sss");
+			String format = extractOption();
+			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+			try {
+				df = new SimpleDateFormat(format);
+			} catch(Exception e) {
+				LogLog.warn("date pattern '" + format + "' is wrong");
+			}
 			pc = new DatePatternConverter(min, max, isLeft, df);
 			break;
 		case 'l':

@@ -63,6 +63,9 @@ public class Logger {
 		this.parent = parent;
 	}
 
+	//-------------------------------------------------------------
+	// 成员属性
+	//-------------------------------------------------------------
 	private String name;
 	private Level level;
 	private Logger parent;
