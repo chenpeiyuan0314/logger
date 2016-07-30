@@ -1,46 +1,77 @@
 package org.yuan.project.logger;
 
+import org.yuan.project.logger.spi.ErrorHandler;
+import org.yuan.project.logger.spi.Filter;
 import org.yuan.project.logger.spi.LoggingEvent;
 
-public abstract class Appender {
+public interface Appender {
 	
-	public Appender() {
-		
-	}
+	/**
+	 * add filter
+	 * @param Filter
+	 */
+	void addFileter(Filter Filter);
 	
-	public Appender(Level level, String name, Layout layout) {
-		this.level = level;
-		this.name = name;
-		this.layout = layout;
-	}
+	/**
+	 * get head filter
+	 * @return
+	 */
+	Filter getFilter();
+	
+	/**
+	 * clear all filters
+	 */
+	void delFilters();
+	
+	/**
+	 *	close resource
+	 */
+	void close();
+	
+	/**
+	 * get appender name
+	 * @return
+	 */
+	String getName();
+	
+	/**
+	 * set appender name
+	 */
+	void setName(String name);
+	
+	/**
+	 * set appender layout
+	 * @param layout
+	 */
+	void setLayout(Layout layout);
+	
+	/**
+	 * get appender layout
+	 * @return
+	 */
+	Layout getLayout();
+	
+	/**
+	 * set errorHandler
+	 * @param errorHandler
+	 */
+	void setErrorHandler(ErrorHandler errorHandler);
 
-	public Level getLevel() {
-		return level;
-	}
+	/**
+	 * get errorHandler
+	 * @return
+	 */
+	ErrorHandler getErrorHandler();
 	
-	public void setLevel(Level level) {
-		this.level = level;
-	}
-	
-	public String getName() {
-		return name;
-	}
-	
-	public void setName(String name) {
-		this.name = name;
-	}
-	
-	public Layout getLayout() {
-		return layout;
-	}
-	
-	public void setLayout(Layout layout) {
-		this.layout = layout;
-	}
-
+	/**
+	 * append log
+	 * @param event
+	 */
 	public abstract void doAppend(LoggingEvent event);
 	
-	private Level level;
-	private String name;
-	private Layout layout;
+	/**
+	 * whether need layout
+	 * @return
+	 */
+	boolean requiresLayout();
 }
