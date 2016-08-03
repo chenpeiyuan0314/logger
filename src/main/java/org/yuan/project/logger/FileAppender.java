@@ -16,6 +16,12 @@ public class FileAppender extends WriterAppender {
 	}
 	
 	public FileAppender(Layout layout, String fileName, 
+		boolean append) throws IOException {
+		setLayout(layout);
+		setFile(fileName, append, true, bufferSize);
+	}
+	
+	public FileAppender(Layout layout, String fileName, 
 		boolean append, boolean bufferedIO, int bufferSize) throws IOException {
 		setLayout(layout);
 		setFile(fileName, append, bufferedIO, bufferSize);
