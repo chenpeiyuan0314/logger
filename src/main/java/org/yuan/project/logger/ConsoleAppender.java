@@ -2,7 +2,7 @@ package org.yuan.project.logger;
 
 import org.yuan.project.logger.spi.LoggingEvent;
 
-public class ConsoleAppender extends Appender {
+public class ConsoleAppender extends AbstractAppender {
 	
 	public ConsoleAppender() {
 		

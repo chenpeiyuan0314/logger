@@ -1,9 +1,26 @@
 package org.yuan.project.logger;
 
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+
 import org.apache.log4j.helpers.QuietWriter;
 import org.yuan.project.logger.spi.LoggingEvent;
 
-public class WriteAppender extends AbstractAppender {
+public class WriterAppender extends AbstractAppender {
+	
+	public WriterAppender() {
+		flush = true;
+	}
+	
+	public WriterAppender(Layout layout, OutputStream os) {
+		this(layout, new OutputStreamWriter(os));
+	}
+	
+	public WriterAppender(Layout layout, Writer writer) {
+		this.layout = layout;
+		this.setWriter(writer);
+	}
 
 	@Override
 	public void close() {
@@ -21,7 +38,6 @@ public class WriteAppender extends AbstractAppender {
 	protected void append(LoggingEvent event) {
 		
 	}
-
 	
 	protected boolean flush;
 	protected String encoding;
