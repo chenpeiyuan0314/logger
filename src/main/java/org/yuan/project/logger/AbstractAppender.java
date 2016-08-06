@@ -9,7 +9,7 @@ import org.yuan.project.logger.spi.OptionHandler;
 public abstract class AbstractAppender implements Appender, OptionHandler {
 
 	@Override
-	public void addFileter(Filter filter) {
+	public void addFilter(Filter filter) {
 		if(headFilter == null) {
 			headFilter = tailFilter = filter;
 			return;
@@ -58,12 +58,12 @@ public abstract class AbstractAppender implements Appender, OptionHandler {
 	
 	@Override
 	public void setErrorHandler(ErrorHandler errorHandler) {
-		throw new UnsupportedOperationException();
+		this.errorHandler = errorHandler;
 	}
 	
 	@Override
 	public ErrorHandler getErrorHandler() {
-		throw new UnsupportedOperationException();
+		return errorHandler;
 	}
 	
 	@Override
@@ -90,6 +90,8 @@ public abstract class AbstractAppender implements Appender, OptionHandler {
 				f = f.getNext();
 			}
 		}
+		
+		append(event);
 	}
 	
 	@Override

@@ -11,6 +11,25 @@ public class LogLog {
 	private static final String PREFIX_ERROR = "log4j:ERROR ";
 	private static final String PREFIX_WARN  = "log4j:WARN ";
 	
+	private static final String QUIET_MODE = "log4j.quiet.mode";
+	private static final String DEBUG_MODE = "log4j.debug.mode";
+	
+	static {
+		String mode = null;
+		
+		// 设置静默模式
+		mode = System.getProperty(QUIET_MODE);
+		if("true".equalsIgnoreCase(mode)) {
+			quietMode = true;
+		}
+		
+		// 设置调试模式
+		mode = System.getProperty(DEBUG_MODE);
+		if("false".equalsIgnoreCase(mode)) {
+			debugMode = false;
+		}
+	}
+	
 	public static void debug(String msg) {
 		debug(msg, null);
 	}
@@ -62,8 +81,10 @@ public class LogLog {
 	public static void main(String[] args) {
 		print("This is test", new Throwable(), System.out);
 		
-		LogLog.setDebugMode(true);
-		LogLog.setQuietMode(true);
+		//LogLog.setDebugMode(true);
+		//LogLog.setQuietMode(true);
+		//System.setProperty(QUIET_MODE, "true");
+		
 		LogLog.debug("quietMode: false, debugMode: true");
 		LogLog.warn("quietMode: false, debugMode: true");
 		LogLog.error("quietMode: false, debugMode: true");

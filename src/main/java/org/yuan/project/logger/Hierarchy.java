@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.or.RendererMap;
 import org.yuan.project.logger.spi.LoggerRepository;
 
 public class Hierarchy implements LoggerRepository {
@@ -93,6 +94,50 @@ public class Hierarchy implements LoggerRepository {
 		}
 	}
 	
+	public void shutdown() {
+		Logger root = getRootLogger();
+		root.closeNestedAppenders();
+		
+		synchronized(table) {
+			List<Logger> list = getCurrentLoggers();
+			for(Logger log : list) {
+				log.closeNestedAppenders();
+			}
+			
+			root.delAllAppenders();
+			for(Logger log : list) {
+				log.delAllAppenders();
+			}
+		}
+	}
+	
+	public void reset() {
+		rootLogger.setLevel(Level.DEBUG);
+		
+		synchronized(table) {
+			List<Logger> list = getCurrentLoggers();
+			for(Logger log : list) {
+				log.setLevel(null);
+			}
+		}
+	}
+	
+	public List<Logger> getCurrentLoggers() {
+		List<Logger> list = new ArrayList<Logger>();
+		
+		for(Object obj : table.values()) {
+			if(obj instanceof Logger) {
+				list.add((Logger)obj);
+			}
+		}
+		
+		return list;
+	}
+	//--------------------------------------------------------------
+	//
+	//--------------------------------------------------------------
 	private Logger rootLogger;
 	private Map<String,Object> table = new HashMap<String,Object>();
+	private Level level;
+	private RendererMap rendererMap;
 }

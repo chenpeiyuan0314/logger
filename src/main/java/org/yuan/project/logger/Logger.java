@@ -1,9 +1,13 @@
 package org.yuan.project.logger;
 
+import java.util.Iterator;
+
+import org.apache.log4j.spi.LoggerRepository;
 import org.yuan.project.logger.helpers.AppenderAttachableImpl;
+import org.yuan.project.logger.spi.AppenderAttachable;
 import org.yuan.project.logger.spi.LoggingEvent;
 
-public class Logger {
+public class Logger implements AppenderAttachable{
 
 	protected Logger(String name) {
 		this.name = name;
@@ -22,6 +26,36 @@ public class Logger {
 		return name;
 	}
 	
+	@Override
+	public void delAppender(String name) {
+		aai.delAppender(name);
+	}
+
+	@Override
+	public void delAppender(Appender appender) {
+		aai.delAppender(appender);
+	}
+
+	@Override
+	public void delAllAppenders() {
+		aai.delAllAppenders();
+	}
+
+	@Override
+	public boolean hasAppender(Appender appender) {
+		return aai.hasAppender(appender);
+	}
+
+	@Override
+	public Appender getAppender(String name) {
+		return aai.getAppender(name);
+	}
+
+	@Override
+	public Iterator<Appender> getAllAppenders() {
+		return aai.getAllAppenders();
+	}
+
 	public void addAppender(Appender appender) {
 		aai.addAppender(appender);
 	}
@@ -63,6 +97,22 @@ public class Logger {
 		this.parent = parent;
 	}
 
+	public LoggerRepository getLoggerRepository() {
+		return hierarchy;
+	}
+
+	public void setLoggerRepository(LoggerRepository hierarchy) {
+		this.hierarchy = hierarchy;
+	}
+
+	public void closeNestedAppenders() {
+		Iterator<Appender> iter = getAllAppenders();
+		while(iter.hasNext()) {
+			Appender appe = iter.next();
+			appe.close();
+		}
+	}
+	
 	//-------------------------------------------------------------
 	// 成员属性
 	//-------------------------------------------------------------
@@ -70,4 +120,5 @@ public class Logger {
 	private Level level;
 	private Logger parent;
 	private AppenderAttachableImpl aai;
+	private LoggerRepository hierarchy;
 }

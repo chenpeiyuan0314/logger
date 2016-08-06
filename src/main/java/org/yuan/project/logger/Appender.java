@@ -10,7 +10,7 @@ public interface Appender {
 	 * add filter
 	 * @param Filter
 	 */
-	void addFileter(Filter Filter);
+	void addFilter(Filter Filter);
 	
 	/**
 	 * get head filter
